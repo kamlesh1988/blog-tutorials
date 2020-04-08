@@ -2,6 +2,7 @@ package de.rieckpil.tutorials;
 
 import java.time.Instant;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,6 +18,7 @@ import com.querydsl.core.types.Predicate;
 
 @RestController
 @RequestMapping("/persons")
+@Slf4j
 public class PersonController {
 
 	@Autowired
@@ -38,7 +40,7 @@ public class PersonController {
 		}
 
 		if (lastname != null && !lastname.isEmpty()) {
-			booleanBuilder.and(QPerson.person.lastname.eq(lastname));
+			booleanBuilder.or(QPerson.person.lastname.eq(lastname));
 		}
 
 		if (budget != null && budget != 0) {
@@ -49,17 +51,17 @@ public class PersonController {
 			booleanBuilder.and(
 					QPerson.person.dob.before(Instant.ofEpochSecond(dobLimit)));
 		}
-
+    log.info("Query : {}",booleanBuilder.getValue());
 		return personRepository.findAll(booleanBuilder.getValue(),
 				PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "id")));
 	}
-	
+
 	@GetMapping("/simplified")
 	public Page<Person> getPersonsSimplified(
-			@QuerydslPredicate(root = Person.class) Predicate predicate, 
+			@QuerydslPredicate(root = Person.class) Predicate predicate,
 			@RequestParam(name = "page", defaultValue = "0") int page,
 			@RequestParam(name = "size", defaultValue = "500") int size) {
-	
+
 		return personRepository.findAll(predicate, PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "id")));
 	}
 
